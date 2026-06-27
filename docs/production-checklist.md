@@ -1,0 +1,32 @@
+# Production Checklist
+
+- [ ] MongoDB connection is healthy.
+- [ ] Required secrets are long random values.
+- [ ] First Super Admin has been created.
+- [ ] No public staff signup is available.
+- [ ] CORS allowlist uses exact origins.
+- [ ] HTTPS is enabled.
+- [ ] Meta webhook verifies successfully.
+- [ ] Meta signature verification succeeds.
+- [ ] WhatsApp Cloud API status is configured.
+- [ ] Approved utility templates are configured for appointment confirmation, reminder, reschedule, and cancellation.
+- [ ] Free-form messages are limited to the 24-hour service window.
+- [ ] STOP/unsubscribe handling has been tested.
+- [ ] Non-essential WhatsApp sends are throttled.
+- [ ] Repeated delivery failures pause non-essential sends.
+- [ ] Staff can see a local WhatsApp failure-rate warning.
+- [ ] Lower Dir bookings work Monday to Friday only.
+- [ ] Peshawar bookings work Saturday only.
+- [ ] Sunday is closed unless staff changes schedules.
+- [ ] Past dates and past times are blocked.
+- [ ] Duplicate same-day phone bookings are blocked.
+- [ ] Double slot booking is blocked.
+- [ ] Appointment lookup requires appointment ID and phone number.
+- [ ] RIRS response is safe and does not diagnose.
+- [ ] Emergency guidance directs patients to emergency care.
+- [ ] Message logs show provider IDs and failures.
+- [ ] MongoDB backup and restore procedure has been tested.
+- [ ] Log rotation is configured.
+- [ ] `npm test` passes.
+- [ ] `npm run check:dummy-content` passes.
+- [ ] `npm run build` passes.

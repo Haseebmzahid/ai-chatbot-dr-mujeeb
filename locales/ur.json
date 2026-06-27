@@ -1,0 +1,13 @@
+{
+  "productName": "Dr. Mujeeb Ur Rehman WhatsApp AI Appointment Chatbot",
+  "doctorName": "ڈاکٹر مجیب الرحمٰن",
+  "contact": "0300-8585508",
+  "language": {
+    "english": "English",
+    "urdu": "اردو"
+  },
+  "chat": {
+    "welcome": "ڈاکٹر مجیب الرحمٰن کے واٹس ایپ اپائنٹمنٹ اسسٹنٹ میں خوش آمدید۔ براہِ کرم ایک آپشن منتخب کریں۔",
+    "menu": "واٹس ایپ اسسٹنٹ کے ذریعے اپائنٹمنٹ بک، چیک، تبدیل یا منسوخ کریں۔"
+  }
+}
