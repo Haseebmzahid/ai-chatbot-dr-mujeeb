@@ -44,7 +44,7 @@ export async function getLocation(locationId) {
 
 export async function upsertLocation(locationId, payload) {
   if (locationId) {
-    return models.ClinicLocation.findOneAndUpdate({ locationId }, payload, { new: true }).lean();
+    return models.ClinicLocation.findOneAndUpdate({ locationId }, payload, { returnDocument: "after" }).lean();
   }
   return models.ClinicLocation.create({
     locationId: makePublicId("LOC"),
@@ -65,7 +65,7 @@ export async function updateSchedule(locationId, payload) {
   return models.ScheduleRule.findOneAndUpdate(
     { locationId },
     { ...payload, locationId, timezone: payload.timezone || "Asia/Karachi" },
-    { new: true, upsert: true, setDefaultsOnInsert: true }
+    { returnDocument: "after", upsert: true, setDefaultsOnInsert: true }
   ).lean();
 }
 

@@ -37,8 +37,13 @@ export function validateEnvironment(env = process.env) {
   const production = env.NODE_ENV === "production";
 
   REQUIRED_ALWAYS.forEach((key) => {
-    if (looksMissing(env[key] || "")) errors.push(`${key} is required.`);
-    if ((env[key] || "") && !longEnoughSecret(key, env[key])) errors.push(`${key} must be at least 32 characters.`);
+    const value = env[key] || "";
+    if (looksMissing(value)) {
+      if (production) errors.push(`${key} is required.`);
+      else warnings.push(`${key} is not configured yet. Using a local development fallback.`);
+    } else if (production && !longEnoughSecret(key, value)) {
+      errors.push(`${key} must be at least 32 characters.`);
+    }
   });
 
   if (production && !env.APP_BASE_URL?.startsWith("https://")) {

@@ -177,6 +177,8 @@ Required runtime values:
 
 Use long random values for JWT, cookie, and bootstrap secrets. In production, `APP_BASE_URL` and `CLIENT_BASE_URL` must use HTTPS and `CORS_ALLOWED_ORIGINS` must contain exact origins.
 
+For local development, the server can start without a prefilled MongoDB URI or auth secrets. It will generate ephemeral secrets and boot in a degraded mode if `MONGODB_URI` is omitted.
+
 ## First Admin Setup
 
 1. Start the server with MongoDB and `ADMIN_BOOTSTRAP_TOKEN` configured.
@@ -224,7 +226,9 @@ The Express server serves `dist/` after `npm run build`.
 
 ## MongoDB
 
-Use MongoDB Atlas or a secured MongoDB server. MongoDB is required; the app has no local in-memory production behavior. The app creates required indexes on startup and writes only real clinic configuration plus records created through real setup and real user actions.
+Use MongoDB Atlas or a secured MongoDB server. MongoDB is required for the real application flow; the app has no local in-memory production behavior. The app creates required indexes on startup and writes only real clinic configuration plus records created through real setup and real user actions.
+
+When `NODE_ENV` is not `production`, the server can still boot without `MONGODB_URI`, but database-backed API routes will return `503` until a real MongoDB URI is provided. That is intended for local development only.
 
 Important database behavior:
 

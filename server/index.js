@@ -6,6 +6,7 @@ import cors from "cors";
 import express from "express";
 import rateLimit from "express-rate-limit";
 import helmet from "helmet";
+import { ensureDevelopmentDefaults } from "./config/runtime.js";
 import { validateEnvironment } from "./config/validation.js";
 import { connectDatabase, databaseHealth, disconnectDatabase } from "./db/connection.js";
 import { authenticate } from "./middleware/auth.js";
@@ -25,7 +26,9 @@ const packageJson = JSON.parse(fs.readFileSync(path.join(__dirname, "..", "packa
 export const app = express();
 const port = Number(process.env.PORT || 4000);
 let server;
+ensureDevelopmentDefaults();
 let startupValidation = validateEnvironment();
+let databaseDisabled = false;
 
 function allowedOrigins() {
   const configured = String(process.env.CORS_ALLOWED_ORIGINS || "")
@@ -82,6 +85,12 @@ app.use(
 app.use(rejectParameterPollution);
 app.use(sanitizeInput);
 app.use(generalLimiter);
+app.use((req, res, next) => {
+  if (databaseDisabled && req.path.startsWith("/api") && req.path !== "/api/health") {
+    return res.status(503).json({ message: "MongoDB is not configured for this local development run." });
+  }
+  return next();
+});
 
 app.get("/api/health", (_req, res) => {
   const database = databaseHealth();
@@ -140,8 +149,13 @@ async function start() {
     throw new Error(`Startup validation failed: ${startupValidation.errors.join(" ")}`);
   }
 
-  await connectDatabase();
-  await ensureClinicConfiguration();
+  const database = await connectDatabase();
+  databaseDisabled = !database.connected;
+  if (database.connected) {
+    await ensureClinicConfiguration();
+  } else {
+    console.warn("MongoDB is not configured yet. API routes will return 503 until MONGODB_URI is provided.");
+  }
 
   server = app.listen(port, () => {
     console.log(`Dr. Mujeeb WhatsApp appointment chatbot API listening on http://localhost:${port}`);

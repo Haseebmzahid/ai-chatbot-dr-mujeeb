@@ -166,5 +166,5 @@ export async function listBlockedSlots() {
 }
 
 export async function removeBlockedSlot(blockedSlotId) {
-  return models.BlockedSlot.findOneAndUpdate({ blockedSlotId }, { active: false }, { new: true }).lean();
+  return models.BlockedSlot.findOneAndUpdate({ blockedSlotId }, { active: false }, { returnDocument: "after" }).lean();
 }

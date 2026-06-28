@@ -86,7 +86,7 @@ export const PatientSchema = new mongoose.Schema(
     patientId: publicId,
     fullName: { type: String, required: true, trim: true, index: true },
     phone: { type: String, required: true, trim: true },
-    normalizedPhone: { type: String, required: true, trim: true, index: true },
+    normalizedPhone: { type: String, required: true, trim: true },
     age: { type: Number, min: 1, max: 120 },
     gender: { type: String, enum: ["Male", "Female", "Other"], required: true },
     city: { type: String, trim: true },
@@ -178,7 +178,7 @@ export const MessageLogSchema = new mongoose.Schema(
     messageBody: { type: String, trim: true },
     direction: { type: String, enum: ["Incoming", "Outgoing", "Status"], index: true },
     status: { type: String, trim: true, index: true },
-    providerMessageId: { type: String, trim: true, index: true },
+    providerMessageId: { type: String, trim: true },
     error: { type: String, trim: true },
     retryCount: { type: Number, default: 0 },
     rawPayload: mongoose.Schema.Types.Mixed
@@ -217,7 +217,7 @@ export const WhatsAppConsentSchema = new mongoose.Schema(
   {
     consentId: publicId,
     phone: { type: String, required: true, trim: true },
-    normalizedPhone: { type: String, required: true, trim: true, index: true },
+    normalizedPhone: { type: String, required: true, trim: true },
     optedIn: { type: Boolean, default: true },
     source: { type: String, trim: true },
     language: { type: String, enum: ["en", "ur"], default: "en" },

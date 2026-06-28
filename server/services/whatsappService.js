@@ -206,7 +206,7 @@ export async function upsertInboundConsent({ phone, language = "en", text = "", 
         lastOptInAt: now
       }
     },
-    { new: true, upsert: true }
+    { returnDocument: "after", upsert: true }
   ).lean();
 }
 
@@ -231,7 +231,7 @@ export async function markOptOut({ phone, language = "en", source = "WhatsApp Cl
         failureCount: 0
       }
     },
-    { new: true, upsert: true }
+    { returnDocument: "after", upsert: true }
   ).lean();
 }
 
@@ -540,7 +540,7 @@ export async function updateMessageStatus(providerMessageId, status, rawPayload 
   const log = await models.MessageLog.findOneAndUpdate(
     { providerMessageId },
     { status, rawPayload },
-    { new: true }
+    { returnDocument: "after" }
   ).lean();
   if (log?.normalizedPhone && status === "failed") await recordDeliveryFailure(log.normalizedPhone);
   if (log?.normalizedPhone && ["sent", "delivered", "read"].includes(status)) await recordDeliverySuccess(log.normalizedPhone);

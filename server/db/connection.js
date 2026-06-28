@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 
 let connectionPromise = null;
 let lastConnectionError = "";
+let connectionMode = process.env.MONGODB_URI ? "mongo" : "disabled";
 
 export function isDatabaseReady() {
   return mongoose.connection.readyState === 1;
@@ -10,7 +11,7 @@ export function isDatabaseReady() {
 export function databaseHealth() {
   const states = ["disconnected", "connected", "connecting", "disconnecting"];
   return {
-    mode: "mongo",
+    mode: connectionMode,
     ready: isDatabaseReady(),
     state: states[mongoose.connection.readyState] || "unknown",
     host: mongoose.connection.host || "",
@@ -25,7 +26,12 @@ function wait(ms) {
 
 export async function connectDatabase() {
   if (!process.env.MONGODB_URI) {
-    throw new Error("MONGODB_URI is required. This chatbot does not use a local in-memory store.");
+    if (process.env.NODE_ENV === "production") {
+      throw new Error("MONGODB_URI is required. This chatbot does not use a local in-memory store.");
+    }
+    connectionMode = "disabled";
+    lastConnectionError = "";
+    return { connected: false, mode: "disabled" };
   }
 
   if (isDatabaseReady()) return { connected: true, mode: "mongo" };
@@ -46,6 +52,7 @@ export async function connectDatabase() {
             retryWrites: true
           });
           lastConnectionError = "";
+          connectionMode = "mongo";
           console.log(`MongoDB connected: ${mongoose.connection.host}/${mongoose.connection.name}`);
           return { connected: true, mode: "mongo" };
         } catch (error) {
@@ -69,8 +76,19 @@ export async function disconnectDatabase() {
   if (mongoose.connection.readyState !== 0) {
     await mongoose.disconnect();
   }
+  connectionPromise = null;
+  connectionMode = "mongo";
 }
 
 mongoose.connection.on("error", (error) => {
   lastConnectionError = error.message;
 });
+
+mongoose.connection.on("disconnected", () => {
+  console.warn("MongoDB disconnected!");
+});
+
+mongoose.connection.on("reconnected", () => {
+  console.log("MongoDB reconnected successfully.");
+});
+

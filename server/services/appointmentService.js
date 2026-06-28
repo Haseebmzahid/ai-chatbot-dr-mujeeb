@@ -20,7 +20,7 @@ async function nextTokenNumber(locationId, date, session) {
   const counter = await models.Counter.findOneAndUpdate(
     { scope },
     { $inc: { value: 1 }, $setOnInsert: { counterId: makePublicId("CTR") } },
-    { new: true, upsert: true, session }
+    { returnDocument: "after", upsert: true, session }
   ).lean();
   return counter.value;
 }
@@ -119,7 +119,7 @@ export async function createAppointment(input, actor = null, req = null) {
             consentAccepted: true,
             consentAcceptedAt: patient.consentAcceptedAt || new Date()
           },
-          { new: true, session }
+          { returnDocument: "after", session }
         );
       } else {
         patient = await models.Patient.create(
@@ -160,7 +160,7 @@ export async function createAppointment(input, actor = null, req = null) {
             failureCount: 0
           }
         },
-        { new: true, upsert: true, session }
+        { returnDocument: "after", upsert: true, session }
       );
 
       const tokenNumber = await nextTokenNumber(parsed.locationId, parsed.date, session);
@@ -279,7 +279,7 @@ export async function rescheduleAppointment(input, actor = null, req = null) {
             }
           }
         },
-        { new: true, session }
+        { returnDocument: "after", session }
       );
     });
 
@@ -322,7 +322,7 @@ export async function cancelAppointment(input, actor = null, req = null) {
       cancelledAt: new Date(),
       cancelledBy: actor?.userId || actor?.id || "Patient"
     },
-    { new: true }
+    { returnDocument: "after" }
   ).lean();
 
   if (!appointment) {
@@ -351,7 +351,7 @@ export async function updateAppointmentStatus(appointmentId, status, actor = nul
     updates.cancelledBy = actor?.userId || actor?.id || "Staff";
   }
 
-  const appointment = await models.Appointment.findOneAndUpdate({ appointmentId }, updates, { new: true }).lean();
+  const appointment = await models.Appointment.findOneAndUpdate({ appointmentId }, updates, { returnDocument: "after" }).lean();
   if (!appointment) {
     const error = new Error("Appointment was not found.");
     error.status = 404;

@@ -47,7 +47,7 @@ router.put("/:userId", async (req, res, next) => {
       updates.passwordHash = await bcrypt.hash(parsed.password, 12);
       delete updates.password;
     }
-    const user = await models.User.findOneAndUpdate({ userId: req.params.userId }, updates, { new: true }).select("-passwordHash").lean();
+    const user = await models.User.findOneAndUpdate({ userId: req.params.userId }, updates, { returnDocument: "after" }).select("-passwordHash").lean();
     await addAuditLog({ actor: req.user, action: "Staff user updated", module: "Users", targetType: "User", targetId: req.params.userId, req });
     res.json({ user });
   } catch (error) {
