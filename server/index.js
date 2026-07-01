@@ -24,7 +24,7 @@ import { getWhatsAppStatus } from "./services/whatsappService.js";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const packageJson = JSON.parse(fs.readFileSync(path.join(__dirname, "..", "package.json"), "utf8"));
 export const app = express();
-const port = Number(process.env.PORT || 4000);
+const port = process.env.PORT && isNaN(Number(process.env.PORT)) ? process.env.PORT : Number(process.env.PORT || 4000);
 let server;
 ensureDevelopmentDefaults();
 let startupValidation = validateEnvironment();
@@ -158,7 +158,8 @@ async function start() {
   }
 
   server = app.listen(port, () => {
-    console.log(`Dr. Mujeeb WhatsApp appointment chatbot API listening on http://localhost:${port}`);
+    const address = typeof port === "string" ? port : `http://localhost:${port}`;
+    console.log(`Dr. Mujeeb WhatsApp appointment chatbot API listening on ${address}`);
   });
   server.requestTimeout = Number(process.env.REQUEST_TIMEOUT_MS || 30000);
   server.headersTimeout = Number(process.env.HEADERS_TIMEOUT_MS || 35000);
