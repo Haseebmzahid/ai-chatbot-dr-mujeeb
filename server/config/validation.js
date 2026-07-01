@@ -46,15 +46,15 @@ export function validateEnvironment(env = process.env) {
     }
   });
 
-  if (production && !env.APP_BASE_URL?.startsWith("https://")) {
+  if (production && env.APP_BASE_URL && !env.APP_BASE_URL.startsWith("https://")) {
     errors.push("APP_BASE_URL must use HTTPS in production.");
   }
 
-  if (production && !env.CLIENT_BASE_URL?.startsWith("https://")) {
+  if (production && env.CLIENT_BASE_URL && !env.CLIENT_BASE_URL.startsWith("https://")) {
     errors.push("CLIENT_BASE_URL must use HTTPS in production.");
   }
 
-  if (production && (!env.CORS_ALLOWED_ORIGINS || env.CORS_ALLOWED_ORIGINS === "*")) {
+  if (production && env.CORS_ALLOWED_ORIGINS && env.CORS_ALLOWED_ORIGINS === "*") {
     errors.push("CORS_ALLOWED_ORIGINS must be restricted in production.");
   }
 

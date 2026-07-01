@@ -87,7 +87,7 @@ app.use(sanitizeInput);
 app.use(generalLimiter);
 app.use((req, res, next) => {
   if (databaseDisabled && req.path.startsWith("/api") && req.path !== "/api/health") {
-    return res.status(503).json({ message: "MongoDB is not configured for this local development run." });
+    return res.status(503).json({ message: "Database connection is not available. Please try again later." });
   }
   return next();
 });
@@ -149,14 +149,6 @@ async function start() {
     throw new Error(`Startup validation failed: ${startupValidation.errors.join(" ")}`);
   }
 
-  const database = await connectDatabase();
-  databaseDisabled = !database.connected;
-  if (database.connected) {
-    await ensureClinicConfiguration();
-  } else {
-    console.warn("MongoDB is not configured yet. API routes will return 503 until MONGODB_URI is provided.");
-  }
-
   server = app.listen(port, () => {
     const address = typeof port === "string" ? port : `http://localhost:${port}`;
     console.log(`Dr. Mujeeb WhatsApp appointment chatbot API listening on ${address}`);
@@ -164,6 +156,20 @@ async function start() {
   server.requestTimeout = Number(process.env.REQUEST_TIMEOUT_MS || 30000);
   server.headersTimeout = Number(process.env.HEADERS_TIMEOUT_MS || 35000);
   server.keepAliveTimeout = Number(process.env.KEEP_ALIVE_TIMEOUT_MS || 5000);
+
+  connectDatabase()
+    .then(async (database) => {
+      databaseDisabled = !database.connected;
+      if (database.connected) {
+        await ensureClinicConfiguration();
+      } else {
+        console.warn("MongoDB is not configured yet. API routes will return 503 until MONGODB_URI is provided.");
+      }
+    })
+    .catch((error) => {
+      console.error("Delayed MongoDB connection failed:", error.message);
+      databaseDisabled = true;
+    });
 }
 
 async function shutdown(signal, exitCode = 0) {
