@@ -65,11 +65,12 @@ app.use(
 );
 app.use(securityHeaders);
 app.use(
+  "/api",
   cors({
     origin(origin, callback) {
       if (!origin) return callback(null, true);
       if (allowedOrigins().includes(origin)) return callback(null, true);
-      return callback(new Error("CORS origin is not allowed."));
+      return callback(null, false);
     },
     credentials: true
   })
@@ -124,7 +125,7 @@ app.use("/api/users", usersRoutes);
 const distPath = path.join(__dirname, "..", "dist");
 if (fs.existsSync(distPath)) {
   app.use(express.static(distPath));
-  app.get(/^\/(?!api).*/, (_req, res) => {
+  app.get(/^\/(?!api|assets).*/, (_req, res) => {
     res.sendFile(path.join(distPath, "index.html"));
   });
 }
