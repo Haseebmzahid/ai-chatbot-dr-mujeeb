@@ -111,9 +111,24 @@ async function processWebhookPayload(payload) {
 
 router.post("/webhook", (req, res, next) => {
   try {
-    if (process.env.META_APP_SECRET && !verifyMetaSignature(req)) {
-      return res.status(403).json({ message: "Invalid Meta signature." });
+    const debugInfo = {
+      signature: req.headers["x-hub-signature-256"],
+      object: req.body ? req.body.object : undefined,
+      rawBodyLength: req.rawBody ? req.rawBody.length : undefined
+    };
+    console.log("[Webhook Debug] Request received at beginning of route handler:", debugInfo);
+
+    if (process.env.META_APP_SECRET) {
+      console.log("[Webhook Debug] Immediately before verifyMetaSignature(req):", debugInfo);
+      const isSignatureValid = verifyMetaSignature(req);
+      console.log(`[Webhook Debug] Immediately after verifyMetaSignature(req). Result: ${isSignatureValid}`, debugInfo);
+      
+      if (!isSignatureValid) {
+        console.log("[Webhook Debug] Signature validation failed. Rejection return statement reached:", debugInfo);
+        return res.status(403).json({ message: "Invalid Meta signature." });
+      }
     }
+
     const payload = req.body;
     setImmediate(() => {
       processWebhookPayload(payload).catch((error) => {
