@@ -21,6 +21,9 @@ function sanitizeValue(value) {
 }
 
 export function sanitizeInput(req, _res, next) {
+  if (req.path === "/api/whatsapp/webhook" || req.path === "/api/whatsapp/webhook/") {
+    return next();
+  }
   if (req.body && typeof req.body === "object") req.body = sanitizeValue(req.body);
   if (req.query && typeof req.query === "object") {
     const clean = sanitizeValue(req.query);
@@ -36,6 +39,9 @@ export function sanitizeInput(req, _res, next) {
 }
 
 export function rejectParameterPollution(req, res, next) {
+  if (req.path === "/api/whatsapp/webhook" || req.path === "/api/whatsapp/webhook/") {
+    return next();
+  }
   const polluted = Object.values(req.query || {}).some((value) => Array.isArray(value));
   if (polluted) return res.status(400).json({ message: "Repeated query parameters are not allowed." });
   return next();
