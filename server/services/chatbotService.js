@@ -45,12 +45,12 @@ function numberChoice(text) {
 export function classifyIntent(input = "") {
   const text = input.toLowerCase().trim();
   const n = numberChoice(text);
-  if (n === 1) return "book";
+  if (n === 1) return "rirs";
   if (n === 2) return "check";
   if (n === 3) return "reschedule";
   if (n === 4) return "cancel";
   if (n === 5) return "locations";
-  if (n === 6) return "rirs";
+  if (n === 6) return "book";
   if (n === 7) return "profile";
   if (n === 8) return "reception";
   if (n === 9) return "emergency";
@@ -110,20 +110,20 @@ async function resetToMenu(session, language = session.language) {
 function menuOptions(language = "en") {
   return language === "ur"
     ? [
-        option("اپائنٹمنٹ بک کریں", "1"),
+        option("RIRS معلومات", "1"),
         option("اپائنٹمنٹ چیک کریں", "2"),
         option("اپائنٹمنٹ تبدیل کریں", "3"),
         option("اپائنٹمنٹ منسوخ کریں", "4"),
         option("لوکیشنز اور اوقات", "5"),
-        option("RIRS معلومات", "6")
+        option("اپائنٹمنٹ بک کریں", "6")
       ]
     : [
-        option("Book Appointment", "1"),
+        option("RIRS Info", "1"),
         option("Check My Appointment", "2"),
         option("Reschedule Appointment", "3"),
         option("Cancel Appointment", "4"),
         option("Locations & Timings", "5"),
-        option("RIRS Info", "6")
+        option("Book Appointment", "6")
       ];
 }
 
