@@ -22,6 +22,8 @@ test("intent mapping understands English, Urdu, and Roman Urdu", () => {
   assert.equal(classifyIntent("RIRS ka cost"), "rirs");
   assert.equal(classifyIntent("اپائنٹمنٹ منسوخ کرنی ہے"), "cancel");
   assert.equal(classifyIntent("1"), "rirs");
+  assert.equal(classifyIntent("2"), "locations");
+  assert.equal(classifyIntent("5"), "check");
   assert.equal(classifyIntent("6"), "book");
 });
 
