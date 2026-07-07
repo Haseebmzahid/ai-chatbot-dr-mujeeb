@@ -337,15 +337,35 @@ function buildWhatsAppPayload({ normalizedPhone, text, useTemplate, templateName
 
 async function postToWhatsApp(payload) {
   const url = `https://graph.facebook.com/v20.0/${process.env.WHATSAPP_PHONE_NUMBER_ID}/messages`;
-  const response = await fetch(url, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${process.env.WHATSAPP_ACCESS_TOKEN}`,
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify(payload)
+  console.log("[Webhook Debug] Immediately before Meta Graph API POST request:", {
+    url,
+    payload: JSON.stringify(payload, null, 2)
   });
+  
+  let response;
+  try {
+    response = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${process.env.WHATSAPP_ACCESS_TOKEN}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(payload)
+    });
+  } catch (err) {
+    console.error("[Webhook Debug] Meta Graph API fetch call failed with network error:", err.message);
+    throw err;
+  }
+
   const body = await response.json().catch(() => ({}));
+  
+  console.log("[Webhook Debug] Immediately after Meta Graph API response:", {
+    url,
+    statusCode: response.status,
+    ok: response.ok,
+    responseBody: JSON.stringify(body, null, 2)
+  });
+
   return {
     ok: response.ok,
     statusCode: response.status,
@@ -391,8 +411,10 @@ export async function sendWhatsAppText({
   ignoreOptOut = false,
   patientInitiated = false
 }) {
+  console.log("[Webhook Debug] Entering sendWhatsAppText:", { to, text, messageType, ignoreOptOut, patientInitiated });
   const normalized = normalizePhone(to);
   if (!whatsappConfigured()) {
+    console.warn("[Webhook Debug] sendWhatsAppText rejected: WhatsApp is not configured.");
     const log = await logMessage({
       phone: to,
       appointmentId,
@@ -410,6 +432,7 @@ export async function sendWhatsAppText({
     };
   }
 
+  console.log("[Webhook Debug] Checking sendPolicy for phone:", normalized);
   const policy = await sendPolicy({
     normalizedPhone: normalized,
     messageType,
@@ -418,8 +441,10 @@ export async function sendWhatsAppText({
     patientInitiated,
     templateName
   });
+  console.log("[Webhook Debug] sendPolicy result:", policy);
 
   if (!policy.allowed) {
+    console.warn("[Webhook Debug] sendWhatsAppText rejected by policy:", policy.status, policy.message);
     const log = await logMessage({
       phone: to,
       appointmentId,
@@ -442,7 +467,9 @@ export async function sendWhatsAppText({
   });
 
   try {
+    console.log("[Webhook Debug] Invoking sendWithRetry with payload");
     const result = await sendWithRetry(payload);
+    console.log("[Webhook Debug] sendWithRetry finished. Status:", result.ok ? "success" : "failed", "Result:", result);
     const status = result.ok ? "sent" : "failed";
 
     await logMessage({
@@ -475,6 +502,7 @@ export async function sendWhatsAppText({
       templateName: policy.useTemplate ? policy.templateName : ""
     };
   } catch (error) {
+    console.error("[Webhook Debug] Exception during sendWithRetry:", error.message);
     await logMessage({
       phone: to,
       appointmentId,

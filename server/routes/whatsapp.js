@@ -45,12 +45,14 @@ function optOutConfirmation(language = "en") {
 }
 
 async function processWebhookPayload(payload) {
+  console.log("[Webhook Debug] Entering processWebhookPayload with payload:", JSON.stringify(payload, null, 2));
   const entries = payload?.entry || [];
   for (const entry of entries) {
     for (const change of entry.changes || []) {
       const value = change.value || {};
 
       for (const status of value.statuses || []) {
+        console.log("[Webhook Debug] Processing status update:", status.id, "Status:", status.status);
         await updateMessageStatus(status.id, status.status, status);
         await logMessage({
           phone: status.recipient_id,
@@ -62,12 +64,22 @@ async function processWebhookPayload(payload) {
       }
 
       for (const message of value.messages || []) {
+        console.log("[Webhook Debug] Processing incoming message:", message.id, "Type:", message.type);
         const event = await recordWebhookEvent(message.id, message.type || "message");
-        if (event.duplicate) continue;
+        if (event.duplicate) {
+          console.log("[Webhook Debug] Duplicate event ignored:", message.id);
+          continue;
+        }
 
-        const phone = normalizePhone(message.from);
+        const rawFrom = message.from;
+        const phone = normalizePhone(rawFrom);
         const text = compactText(message.text?.body || message.button?.text || message.interactive?.button_reply?.title || "", 1000);
-        if (!text) continue;
+        console.log("[Webhook Debug] Extracted message details:", { rawFrom, normalizedPhone: phone, text });
+        
+        if (!text) {
+          console.log("[Webhook Debug] No text content extracted from message, skipping processing");
+          continue;
+        }
         const language = detectLanguage(text);
 
         await logMessage({
@@ -81,7 +93,9 @@ async function processWebhookPayload(payload) {
         });
 
         if (isOptOutMessage(text)) {
+          console.log("[Webhook Debug] Opt-out message detected. Performing opt-out for:", phone);
           await markOptOut({ phone, language });
+          console.log("[Webhook Debug] Sending opt-out confirmation to:", phone);
           await sendWhatsAppText({
             to: phone,
             text: optOutConfirmation(language),
@@ -94,9 +108,15 @@ async function processWebhookPayload(payload) {
           continue;
         }
 
+        console.log("[Webhook Debug] Registering inbound consent/updating last message time for:", phone);
         await upsertInboundConsent({ phone, language, text });
+        
+        console.log("[Webhook Debug] Calling handleChatMessage for message from:", phone);
         const reply = await handleChatMessage({ phone, message: text });
-        await sendWhatsAppText({
+        console.log("[Webhook Debug] handleChatMessage execution complete. Reply payload:", reply);
+
+        console.log("[Webhook Debug] Calling sendWhatsAppText to respond to:", phone);
+        const sendResult = await sendWhatsAppText({
           to: phone,
           text: reply.text,
           messageType: "chatbot_reply",
@@ -104,9 +124,11 @@ async function processWebhookPayload(payload) {
           language,
           patientInitiated: true
         });
+        console.log("[Webhook Debug] sendWhatsAppText complete. Result:", sendResult);
       }
     }
   }
+  console.log("[Webhook Debug] Exiting processWebhookPayload");
 }
 
 router.post("/webhook", (req, res, next) => {
@@ -130,11 +152,15 @@ router.post("/webhook", (req, res, next) => {
     }
 
     const payload = req.body;
+    console.log("[Webhook Debug] Scheduling processWebhookPayload with setImmediate");
     setImmediate(() => {
+      console.log("[Webhook Debug] setImmediate callback triggered: starting processWebhookPayload");
       processWebhookPayload(payload).catch((error) => {
-        console.error("WhatsApp webhook processing failed:", error.message);
+        console.error("[Webhook Debug] processWebhookPayload failed with error:", error.message);
       });
+      console.log("[Webhook Debug] setImmediate callback: processWebhookPayload initiated asynchronously");
     });
+    console.log("[Webhook Debug] Sending ok response (200) to Meta");
     res.json({ ok: true });
   } catch (error) {
     next(error);
