@@ -70,8 +70,10 @@ export function classifyIntent(input = "") {
 }
 
 async function getSession(normalizedPhone, hintedLanguage) {
+  console.log("[Chatbot Debug DB Read] Querying ChatSession for phone:", normalizedPhone);
   let session = await models.ChatSession.findOne({ normalizedPhone });
   if (!session) {
+    console.log("[Chatbot Debug DB Write] Creating new ChatSession for phone:", normalizedPhone);
     session = await models.ChatSession.create({
       chatSessionId: makePublicId("CHT"),
       normalizedPhone,
@@ -80,13 +82,23 @@ async function getSession(normalizedPhone, hintedLanguage) {
       draft: {},
       lastMessageAt: new Date()
     });
+  } else {
+    console.log("[Chatbot Debug DB Read] Found ChatSession:", {
+      chatSessionId: session.chatSessionId,
+      step: session.step,
+      draft: session.draft,
+      lastMessageAt: session.lastMessageAt
+    });
   }
   return session;
 }
 
 async function saveSession(session, updates) {
+  console.log("[Chatbot Debug DB Write] Saving ChatSession updates:", updates, "for phone:", session.normalizedPhone);
   Object.assign(session, updates, { lastMessageAt: new Date() });
+  session.markModified("draft");
   await session.save();
+  console.log("[Chatbot Debug DB Write] ChatSession saved successfully. Current step is now:", session.step);
   return session;
 }
 
@@ -226,10 +238,16 @@ async function handleBooking(session, value) {
   const draft = session.draft || {};
 
   if (session.step === "book_consent") {
+    console.log("[Chatbot Debug handleBooking] book_consent evaluation: value =", JSON.stringify(value), "yes(value) =", yes(value), "no(value) =", no(value));
     if (!yes(value)) {
-      if (no(value)) return resetToMenu(session, language);
+      if (no(value)) {
+        console.log("[Chatbot Debug handleBooking] User selected NO. Resetting to menu.");
+        return resetToMenu(session, language);
+      }
+      console.log("[Chatbot Debug handleBooking] User input not recognized as yes or no. Repeating consent prompt.");
       return { text: consentMessage(language), language };
     }
+    console.log("[Chatbot Debug handleBooking] User selected YES. Advancing to book_name.");
     await saveSession(session, { step: "book_name", draft: { consentAccepted: true } });
     return { text: ask(language, "Please enter patient full name.", "براہِ کرم مریض کا مکمل نام لکھیں۔"), language };
   }
@@ -492,34 +510,58 @@ export async function handleChatMessage(input, context = {}) {
   const parsed = chatMessageSchema.parse(input);
   const normalizedPhone = normalizePhone(parsed.phone);
   const hintedLanguage = parsed.language || (detectUrdu(parsed.message) ? "ur" : "en");
+  
+  console.log("[Chatbot Debug] Entering handleChatMessage for phone:", normalizedPhone, "with message:", JSON.stringify(parsed.message));
+  
   const session = await getSession(normalizedPhone, hintedLanguage);
+  console.log("[Chatbot Debug State Before]", { step: session.step, draft: session.draft });
+  
   const value = compactText(parsed.message, 1000);
 
+  let reply;
   if (/^(hi|hello|start|menu|0|السلام|سلام)$/i.test(value)) {
+    console.log("[Chatbot Debug] Message matches menu reset pattern");
     await saveSession(session, { step: session.step === "language" ? "language" : "menu", language: session.language || hintedLanguage, draft: {} });
-    if (session.step === "language") return { text: languagePrompt(), language: session.language };
-    return resetToMenu(session, session.language);
-  }
-
-  if (session.step === "language") {
+    if (session.step === "language") reply = { text: languagePrompt(), language: session.language };
+    else reply = await resetToMenu(session, session.language);
+  } else if (session.step === "language") {
+    console.log("[Chatbot Debug] Processing language step");
     const language = value.trim() === "2" || /urdu|اردو/i.test(value) ? "ur" : value.trim() === "1" || /english/i.test(value) ? "en" : null;
-    if (!language) return { text: languagePrompt(), language: hintedLanguage };
-    return resetToMenu(session, language);
+    if (!language) reply = { text: languagePrompt(), language: hintedLanguage };
+    else reply = await resetToMenu(session, language);
+  } else {
+    try {
+      if (session.step.startsWith("book_")) {
+        console.log("[Chatbot Debug] Delegating to handleBooking");
+        reply = await handleBooking(session, value);
+      } else if (session.step.startsWith("check_")) {
+        console.log("[Chatbot Debug] Delegating to handleCheck");
+        reply = await handleCheck(session, value);
+      } else if (session.step.startsWith("reschedule_")) {
+        console.log("[Chatbot Debug] Delegating to handleReschedule");
+        reply = await handleReschedule(session, value);
+      } else if (session.step.startsWith("cancel_")) {
+        console.log("[Chatbot Debug] Delegating to handleCancel");
+        reply = await handleCancel(session, value);
+      } else {
+        console.log("[Chatbot Debug] Delegating to handleMenu");
+        reply = await handleMenu(session, value);
+      }
+    } catch (error) {
+      console.error("[Chatbot Debug Error]", error);
+      await saveSession(session, { step: "menu", draft: {} });
+      reply = {
+        text: `${error.message || ask(session.language, "Something went wrong. Please try again.", "کچھ غلط ہو گیا۔ براہِ کرم دوبارہ کوشش کریں۔")}\n\n${mainMenu(session.language)}`,
+        options: menuOptions(session.language),
+        language: session.language,
+        error: context.includeErrors ? error.message : undefined
+      };
+    }
   }
 
-  try {
-    if (session.step.startsWith("book_")) return handleBooking(session, value);
-    if (session.step.startsWith("check_")) return handleCheck(session, value);
-    if (session.step.startsWith("reschedule_")) return handleReschedule(session, value);
-    if (session.step.startsWith("cancel_")) return handleCancel(session, value);
-    return handleMenu(session, value);
-  } catch (error) {
-    await saveSession(session, { step: "menu", draft: {} });
-    return {
-      text: `${error.message || ask(session.language, "Something went wrong. Please try again.", "کچھ غلط ہو گیا۔ براہِ کرم دوبارہ کوشش کریں۔")}\n\n${mainMenu(session.language)}`,
-      options: menuOptions(session.language),
-      language: session.language,
-      error: context.includeErrors ? error.message : undefined
-    };
-  }
+  // Fetch the fresh state from DB to see if the session was successfully saved and updated
+  const freshSession = await models.ChatSession.findOne({ normalizedPhone });
+  console.log("[Chatbot Debug State After]", { step: freshSession?.step, draft: freshSession?.draft });
+  
+  return reply;
 }

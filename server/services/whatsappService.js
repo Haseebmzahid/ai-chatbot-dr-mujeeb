@@ -203,7 +203,7 @@ export async function upsertInboundConsent({ phone, language = "en", text = "", 
       $setOnInsert: {
         consentId: makePublicId("CNS"),
         failureCount: 0,
-        lastOptInAt: now
+        ...(optIn ? {} : { lastOptInAt: now })
       }
     },
     { returnDocument: "after", upsert: true }
