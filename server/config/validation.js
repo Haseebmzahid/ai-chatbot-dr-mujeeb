@@ -6,12 +6,15 @@ const REQUIRED_ALWAYS = [
   "ADMIN_BOOTSTRAP_TOKEN"
 ];
 
-const WHATSAPP_KEYS = [
+const CORE_WHATSAPP_KEYS = [
   "WHATSAPP_ACCESS_TOKEN",
   "WHATSAPP_PHONE_NUMBER_ID",
   "WHATSAPP_BUSINESS_ACCOUNT_ID",
   "WHATSAPP_VERIFY_TOKEN",
-  "META_APP_SECRET",
+  "META_APP_SECRET"
+];
+
+const OPTIONAL_WHATSAPP_TEMPLATES = [
   "WHATSAPP_TEMPLATE_APPOINTMENT_CONFIRMATION",
   "WHATSAPP_TEMPLATE_APPOINTMENT_REMINDER",
   "WHATSAPP_TEMPLATE_RESCHEDULE_CONFIRMATION",
@@ -28,7 +31,7 @@ function longEnoughSecret(key, value = "") {
 }
 
 export function whatsappConfigured(env = process.env) {
-  return WHATSAPP_KEYS.every((key) => !looksMissing(env[key] || ""));
+  return CORE_WHATSAPP_KEYS.every((key) => !looksMissing(env[key] || ""));
 }
 
 export function validateEnvironment(env = process.env) {
@@ -59,7 +62,13 @@ export function validateEnvironment(env = process.env) {
   }
 
   if (!whatsappConfigured(env)) {
-    warnings.push("WhatsApp is not configured yet. The API will log skipped messages and will not report delivery.");
+    warnings.push("WhatsApp core configuration is missing. The API will log skipped messages and will not report delivery.");
+  } else {
+    OPTIONAL_WHATSAPP_TEMPLATES.forEach((key) => {
+      if (looksMissing(env[key] || "")) {
+        warnings.push(`Optional WhatsApp template key ${key} is not configured.`);
+      }
+    });
   }
 
   return {
