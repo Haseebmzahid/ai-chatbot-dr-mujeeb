@@ -261,7 +261,7 @@ async function handleBooking(session, value) {
     try {
       draft.phone = phoneSchema.parse(value);
     } catch {
-      return { text: ask(language, "Please enter a valid phone number, for example 0300-8585508.", "براہِ کرم درست فون نمبر لکھیں، مثال 0300-8585508۔"), language };
+      return { text: ask(language, "Please enter a valid phone number, for example 0300-8585508.", "براہِ کرم درست فون نمبر لکھیں، مثال \u20660300-8585508\u2069۔"), language };
     }
     await saveSession(session, { step: "book_age", draft });
     return { text: ask(language, "Please enter patient age.", "براہِ کرم مریض کی عمر لکھیں۔"), language };

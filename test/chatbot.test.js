@@ -109,6 +109,17 @@ test("WhatsApp template names and components are derived safely", () => {
   });
   assert.equal(components[0].type, "body");
   assert.equal(components[0].parameters.length, 7);
+  assert.equal(components[0].parameters[6].text, "0300-8585508");
+
+  const componentsUr = appointmentTemplateComponents({
+    doctorName: "Dr. Mujeeb Ur Rehman",
+    date: "2026-06-29",
+    time: "09:00",
+    locationNameEn: "Al Habib General Hospital",
+    tokenNumber: 1,
+    appointmentId: "APT-123"
+  }, "appointment_confirmation", "ur");
+  assert.equal(componentsUr[0].parameters[6].text, "\u20660300-8585508\u2069");
 });
 
 test("Meta webhook signature verification rejects invalid signatures", () => {

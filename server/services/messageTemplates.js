@@ -72,7 +72,7 @@ export function locationsMessage(language = "en") {
       "   صرف ہفتہ",
       "   دوپہر 12:00 بجے تا شام 7:00 بجے",
       "",
-      `اپائنٹمنٹ کے لیے رابطہ: ${DOCTOR.contact}`
+      `اپائنٹمنٹ کے لیے رابطہ: \u2066${DOCTOR.contact}\u2069`
     ].join("\n");
   }
 
@@ -102,7 +102,7 @@ export function doctorProfileMessage(language = "en") {
       "",
       "ڈاکٹر صاحب گردے کی پتھری، پیشاب کے مسائل، پروسٹیٹ، مثانے کے مسائل اور اینڈو یورولوجی سے متعلق مریض دیکھتے ہیں۔",
       "",
-      `اپائنٹمنٹ کے لیے رابطہ: ${DOCTOR.contact}`
+      `اپائنٹمنٹ کے لیے رابطہ: \u2066${DOCTOR.contact}\u2069`
     ].join("\n");
   }
 
@@ -124,7 +124,7 @@ export function rirsMessage(language = "en") {
       "",
       "صرف آن لائن پیغامات یا رپورٹس کی بنیاد پر حتمی مشورہ یا حتمی لاگت بتانا ممکن نہیں۔ درست تشخیص، علاج کے انتخاب اور اخراجات کے لیے براہِ کرم کلینک میں تشریف لائیں تاکہ ڈاکٹر صاحب معائنہ اور رپورٹس کا تفصیلی جائزہ لے سکیں۔",
       "",
-      `اپائنٹمنٹ کے لیے رابطہ: ${DOCTOR.contact}`
+      `اپائنٹمنٹ کے لیے رابطہ: \u2066${DOCTOR.contact}\u2069`
     ].join("\n");
   }
 
@@ -144,7 +144,7 @@ export function emergencyMessage(language = "en") {
 
 export function contactReceptionMessage(language = "en") {
   return isUrdu(language)
-    ? `ریسیپشن سے رابطہ کے لیے کال کریں: ${DOCTOR.contact}`
+    ? `ریسیپشن سے رابطہ کے لیے کال کریں: \u2066${DOCTOR.contact}\u2069`
     : `Please contact reception at ${DOCTOR.contact}.`;
 }
 
@@ -161,7 +161,7 @@ export function appointmentConfirmation(appointment, language = "en") {
       `لوکیشن: ${location}`,
       `ٹوکن نمبر: ${appointment.tokenNumber}`,
       `اپائنٹمنٹ آئی ڈی: ${appointment.appointmentId}`,
-      `رابطہ نمبر: ${DOCTOR.contact}`,
+      `رابطہ نمبر: \u2066${DOCTOR.contact}\u2069`,
       "",
       "براہِ کرم اپائنٹمنٹ کے وقت سے 10 سے 15 منٹ پہلے تشریف لائیں اور اپنی سابقہ رپورٹس، الٹراساؤنڈ، CT scan، نسخے اور لیب ٹیسٹ ساتھ لائیں۔"
     ].join("\n");
@@ -196,7 +196,7 @@ export function appointmentLookupMessage(appointment, language = "en") {
       `سٹیٹس: ${appointment.status}`,
       `ٹوکن نمبر: ${appointment.tokenNumber}`,
       "",
-      `فون: ${appointment.maskedPhone || maskPhone(appointment.normalizedPhone || appointment.phone)}`
+      `فون: \u2066${appointment.maskedPhone || maskPhone(appointment.normalizedPhone || appointment.phone)}\u2069`
     ].join("\n");
   }
 

@@ -132,8 +132,9 @@ function textParameter(value) {
   return { type: "text", text: String(value || "-").slice(0, 1024) };
 }
 
-export function appointmentTemplateComponents(appointment, messageType = "appointment_confirmation") {
+export function appointmentTemplateComponents(appointment, messageType = "appointment_confirmation", language = "en") {
   if (!appointment) return [];
+  const contactNumber = language === "ur" ? "\u20660300-8585508\u2069" : "0300-8585508";
   const common = [
     appointment.doctorName || "Dr. Mujeeb Ur Rehman",
     appointment.date,
@@ -141,9 +142,9 @@ export function appointmentTemplateComponents(appointment, messageType = "appoin
     appointment.locationNameEn || appointment.locationNameUr,
     appointment.tokenNumber,
     appointment.appointmentId,
-    "0300-8585508"
+    contactNumber
   ];
-  const cancellation = [appointment.appointmentId, appointment.date, appointment.time, "0300-8585508"];
+  const cancellation = [appointment.appointmentId, appointment.date, appointment.time, contactNumber];
   const values = messageType === "cancellation_confirmation" ? cancellation : common;
   return [{ type: "body", parameters: values.map(textParameter) }];
 }
@@ -528,7 +529,7 @@ export async function sendAppointmentWhatsApp({ appointment, text, messageType, 
     language,
     operational: true,
     templateName: templateNameForMessageType(messageType),
-    templateComponents: appointmentTemplateComponents(appointment, messageType)
+    templateComponents: appointmentTemplateComponents(appointment, messageType, language)
   });
 }
 

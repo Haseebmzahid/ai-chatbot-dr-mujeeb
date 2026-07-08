@@ -39,7 +39,7 @@ function detectLanguage(text = "") {
 
 function optOutConfirmation(language = "en") {
   if (language === "ur") {
-    return "آپ کو غیر ضروری WhatsApp پیغامات نہیں بھیجے جائیں گے۔ اپائنٹمنٹ کے لیے reception سے رابطہ کریں: 0300-8585508";
+    return "آپ کو غیر ضروری WhatsApp پیغامات نہیں بھیجے جائیں گے۔ اپائنٹمنٹ کے لیے reception سے رابطہ کریں: \u20660300-8585508\u2069";
   }
   return "You will not receive non-essential WhatsApp messages. For appointments, contact reception at 0300-8585508.";
 }

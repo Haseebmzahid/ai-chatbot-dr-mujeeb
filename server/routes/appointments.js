@@ -16,7 +16,7 @@ const router = Router();
 
 function appointmentReminder(appointment, language = "en") {
   if (language === "ur") {
-    return `یاد دہانی: آپ کی Dr. Mujeeb Ur Rehman کے ساتھ اپائنٹمنٹ ${appointment.date} کو ${appointment.time} پر ہے۔ رابطہ: 0300-8585508`;
+    return `یاد دہانی: آپ کی Dr. Mujeeb Ur Rehman کے ساتھ اپائنٹمنٹ ${appointment.date} کو ${appointment.time} پر ہے۔ رابطہ: \u20660300-8585508\u2069`;
   }
   return `Reminder: your appointment with Dr. Mujeeb Ur Rehman is on ${appointment.date} at ${appointment.time}. Contact: 0300-8585508`;
 }
